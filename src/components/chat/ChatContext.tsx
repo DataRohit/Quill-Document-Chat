@@ -1,3 +1,4 @@
+import axios from "axios";
 import { createContext, useRef, useState } from "react";
 
 import { trpc } from "@/app/_trpc/client";
@@ -38,25 +39,20 @@ export const ChatContextProvider = ({
 
 	const backupMessage = useRef<string>("");
 
-	const controller = new AbortController();
-	const timeoutId = setTimeout(() => {
-		controller.abort();
-	}, 25000);
-
 	const { mutate: sendMessage } = useMutation({
 		mutationFn: async ({ message }: { message: string }) => {
-			const response = await fetch(`/api/message`, {
-				method: "POST",
-				body: JSON.stringify({
-					fileId,
-					message,
-				}),
-				signal: controller.signal,
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to add message");
-			}
+			const response = await axios
+				.post("/api/message", { fileId, message }, { timeout: 25000 })
+				.then((res) => {
+					if (res.status >= 200 && res.status < 300) {
+						return res.data;
+					} else {
+						throw new Error("Failed to add message");
+					}
+				})
+				.catch((error) => {
+					throw new Error("Failed to add message: " + error.message);
+				});
 
 			return response.body;
 		},

@@ -1,13 +1,18 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { NextRequest } from 'next/server';
+import { OpenAIStream, StreamingTextResponse } from "ai";
+import { NextRequest } from "next/server";
 
-import { db } from '@/db';
-import { openai } from '@/lib/openai';
-import { pinecone } from '@/lib/pinecone';
-import { SendMessageValidator } from '@/lib/validators/SendMessageValidator';
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { PineconeStore } from '@langchain/pinecone';
+import { db } from "@/db";
+import { openai } from "@/lib/openai";
+import { pinecone } from "@/lib/pinecone";
+import { SendMessageValidator } from "@/lib/validators/SendMessageValidator";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { PineconeStore } from "@langchain/pinecone";
+
+export const config = {
+	runtime: "edge",
+	responseTimeout: 25000,
+};
 
 export const POST = async (req: NextRequest) => {
 	const body = await req.json();
