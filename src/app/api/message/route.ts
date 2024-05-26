@@ -9,6 +9,8 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
 
+export const maxDuration = 60;
+
 export const POST = async (req: NextRequest) => {
 	const body = await req.json();
 
