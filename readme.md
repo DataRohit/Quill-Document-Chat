@@ -2,7 +2,7 @@
 
 Built with the Next.js 13.5 App Router, tRPC, TypeScript, Prisma & Tailwind
 
-![Project Image](https://github.com/DataRohit/blob/master/public/thumbnail.png)
+![Project Image](https://raw.githubusercontent.com/DataRohit/Quill-Document-Chat/master/public/thumbnail.png)
 
 ## Features
 
