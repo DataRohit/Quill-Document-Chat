@@ -1,10 +1,10 @@
-import { createContext, useRef, useState } from 'react';
+import { createContext, useRef, useState } from "react";
 
-import { trpc } from '@/app/_trpc/client';
-import { INFINITE_QUERY_LIMIT } from '@/config/infinite-query';
-import { useMutation } from '@tanstack/react-query';
+import { trpc } from "@/app/_trpc/client";
+import { INFINITE_QUERY_LIMIT } from "@/config/infinite-query";
+import { useMutation } from "@tanstack/react-query";
 
-import { useToast } from '../ui/use-toast';
+import { useToast } from "../ui/use-toast";
 
 type StreamResponse = {
 	addMessage: () => void;
@@ -38,6 +38,11 @@ export const ChatContextProvider = ({
 
 	const backupMessage = useRef<string>("");
 
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => {
+		controller.abort();
+	}, 25000);
+
 	const { mutate: sendMessage } = useMutation({
 		mutationFn: async ({ message }: { message: string }) => {
 			const response = await fetch(`/api/message`, {
@@ -46,6 +51,7 @@ export const ChatContextProvider = ({
 					fileId,
 					message,
 				}),
+				signal: controller.signal,
 			});
 
 			if (!response.ok) {
