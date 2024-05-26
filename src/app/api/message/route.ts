@@ -1,4 +1,4 @@
-import { StreamingTextResponse } from "ai";
+import { OpenAIStream, StreamingTextResponse } from "ai";
 import { NextRequest } from "next/server";
 
 import { db } from "@/db";
@@ -8,8 +8,6 @@ import { SendMessageValidator } from "@/lib/validators/SendMessageValidator";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
-
-export const runtime = "edge";
 
 export const POST = async (req: NextRequest) => {
 	const body = await req.json();
@@ -75,7 +73,7 @@ export const POST = async (req: NextRequest) => {
 		content: message.text,
 	}));
 
-	const responsePromise = openai.chat.completions.create({
+	const response = await openai.chat.completions.create({
 		model: "lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF",
 		temperature: 0,
 		stream: true,
@@ -83,46 +81,42 @@ export const POST = async (req: NextRequest) => {
 			{
 				role: "system",
 				content:
-					"Use the following pieces of context (or previous conversation if needed) to answer the user's question in markdown format.",
+					"Use the following pieces of context (or previous conversaton if needed) to answer the users question in markdown format.",
 			},
 			{
 				role: "user",
-				content: `Use the following pieces of context (or previous conversation if needed) to answer the user's question in markdown format. \nIf you don't know the answer, just say that you don't know, don't try to make up an answer.
-            
-    \n----------------\n
-    
-    PREVIOUS CONVERSATION:
-    ${formattedPreviousMessages.map((message) => {
+				content: `Use the following pieces of context (or previous conversaton if needed) to answer the users question in markdown format. \nIf you don't know the answer, just say that you don't know, don't try to make up an answer.
+			
+	\n----------------\n
+	
+	PREVIOUS CONVERSATION:
+	${formattedPreviousMessages.map((message) => {
 		if (message.role === "user") return `User: ${message.content}\n`;
 		return `Assistant: ${message.content}\n`;
 	})}
-    
-    \n----------------\n
-    
-    CONTEXT:
-    ${results.map((r) => r.pageContent).join("\n\n")}
-    
-    USER INPUT: ${message}`,
+	
+	\n----------------\n
+	
+	CONTEXT:
+	${results.map((r) => r.pageContent).join("\n\n")}
+	
+	USER INPUT: ${message}`,
 			},
 		],
 	});
 
-	const timeoutDuration = 25000;
-	const timeoutPromise = new Promise((resolve, reject) => {
-		setTimeout(() => {
-			reject(new Error("Request timed out"));
-		}, timeoutDuration);
+	const stream = OpenAIStream(response, {
+		async onCompletion(completion) {
+			await db.message.create({
+				data: {
+					text: completion,
+					isUserMessage: false,
+					userId,
+					fileId,
+				},
+			});
+		},
 	});
 
-	try {
-		const response = await Promise.race([responsePromise, timeoutPromise]);
-
-		if (response instanceof StreamingTextResponse) {
-			return response;
-		} else {
-			return new Response("Timed out", { status: 500 });
-		}
-	} catch (error) {
-		return new Response("Timed out", { status: 500 });
-	}
+	return new StreamingTextResponse(stream);
 };
