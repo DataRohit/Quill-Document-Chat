@@ -50,7 +50,7 @@ To get started with this project, run
 ### Step 2:
 Setup the environment variables in `.env` file
 ```env
-KINDE_CLIENT_ID=c
+KINDE_CLIENT_ID=
 KINDE_CLIENT_SECRET=
 KINDE_ISSUER_URL=
 KINDE_SITE_URL=
