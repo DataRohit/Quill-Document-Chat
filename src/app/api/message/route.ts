@@ -76,7 +76,7 @@ export const POST = async (req: NextRequest) => {
 	}));
 
 	const response = await openai.chat.completions.create({
-		model: "lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF",
+		model: "LM Studio Community/Meta-Llama-3-8B-Instruct-GGUF",
 		temperature: 0,
 		stream: true,
 		messages: [
